@@ -13,7 +13,10 @@ import {
   TokenParseError
 } from '../src'
 import { pub, priv } from './fixtures/keys'
-import delay from 'delay'
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 const testTokenStr =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6Imdvb2RLZXkifQ.eyJhdWQiOiJ0ZX' +
@@ -66,7 +69,7 @@ describe('Token', () => {
     })
     it('throws a TokenParseError if a bad token is passed in', () => {
       const getInst = (opts: TokenOptions) => () => new Token(opts)
-      expect(getInst({ token: 'foo' })).toThrowError(TokenParseError)
+      expect(getInst({ token: 'foo' })).toThrow(TokenParseError)
     })
   })
   describe('options', () => {
@@ -174,7 +177,7 @@ describe('Token', () => {
       }
       inst = new Token({ refreshScopes, refreshScopesAfterMs: 10 })
       await inst.hasScope('foo', 'bar')
-      await delay(11)
+      await sleep(11)
       await expect(inst.hasScope('bar', 'baz')).resolves.toBe(false)
     })
     it('grants, checks, and revokes scopes in combined format', async () => {
@@ -228,7 +231,7 @@ describe('Token', () => {
     })
     it('throws when there is no subject', async () => {
       const throws = () => inst.sign('goodKey')
-      await expect(throws).rejects.toThrowError(/subject is required/)
+      await expect(throws).rejects.toThrow(/subject is required/)
     })
     it('throws when the key ID is not in the key map', async () => {
       await expect(inst.sign('noKey', { subject: 'foo' })).rejects.toThrow(
@@ -248,7 +251,7 @@ describe('Token', () => {
     it('rejects if the key is corrupt', async () => {
       await expect(
         inst.sign('corruptKey', { subject: 'foo' })
-      ).rejects.toThrowError()
+      ).rejects.toThrow()
     })
     it('calls getPrivateKey when the private key is not found', async () => {
       inst = new Token({
@@ -288,9 +291,9 @@ describe('Token', () => {
       })
       inst = new Token({ getPrivateKey })
       await inst.sign('privAlgo', { subject: 'foo' })
-      expect(getPrivateKey).toBeCalledTimes(1)
+      expect(getPrivateKey).toHaveBeenCalledTimes(1)
       await inst.sign('privAlgo', { subject: 'foo' })
-      expect(getPrivateKey).toBeCalledTimes(1)
+      expect(getPrivateKey).toHaveBeenCalledTimes(1)
     })
     it('supports signing when an exp claim is already set', async () => {
       const now = Math.floor(Date.now() / 1000)
@@ -360,16 +363,16 @@ describe('Token', () => {
       const signed = await inst.sign('goodKey', { subject: 'foo' })
       inst = new Token({ token: signed, getPublicKey })
       await expect(inst.verify()).resolves.toBeTruthy()
-      expect(getPublicKey).toBeCalledTimes(1)
-      expect(getPublicKey).toBeCalledWith('goodKey')
+      expect(getPublicKey).toHaveBeenCalledTimes(1)
+      expect(getPublicKey).toHaveBeenCalledWith('goodKey')
     })
     it('calls function to get pub key synchronously', async () => {
       const getPublicKey = jest.fn().mockReturnValue(pub)
       const signed = await inst.sign('goodKey', { subject: 'foo' })
       inst = new Token({ token: signed, getPublicKey })
       await expect(inst.verify()).resolves.toBeTruthy()
-      expect(getPublicKey).toBeCalledTimes(1)
-      expect(getPublicKey).toBeCalledWith('goodKey')
+      expect(getPublicKey).toHaveBeenCalledTimes(1)
+      expect(getPublicKey).toHaveBeenCalledWith('goodKey')
     })
     it('gets public key when private key already exists', async () => {
       const getPublicKey = jest.fn().mockResolvedValue(pub)

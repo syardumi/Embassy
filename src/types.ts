@@ -65,9 +65,9 @@ export interface ScopeComponents {
   mask: number
 }
 
-export type AsymmetricAlgorithm = typeof asymmetricAlgorithms[number]
+export type AsymmetricAlgorithm = (typeof asymmetricAlgorithms)[number]
 
-export type SymmetricAlgorithm = typeof symmetricAlgorithms[number]
+export type SymmetricAlgorithm = (typeof symmetricAlgorithms)[number]
 
 export type SigningAlgorithm = SymmetricAlgorithm | AsymmetricAlgorithm
 

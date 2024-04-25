@@ -4,7 +4,7 @@
  */
 
 import base64 from 'base64-js'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtHeader } from 'jsonwebtoken'
 import { KeyNotFoundError } from './errors/KeyNotFoundError'
 import { ScopeNotFoundError } from './errors/ScopeNotFoundError'
 import { TokenParseError } from './errors/TokenParseError'
@@ -54,8 +54,8 @@ export class Token {
         json: true
       })
       if (!decoded) throw new TokenParseError(`Bad token: ${token}`)
-      this.header = decoded.header
-      this.claims = decoded.payload
+      this.header = decoded.header as JWTHeader
+      this.claims = decoded.payload as Claims
     }
     this.decodeBlobs()
   }
@@ -289,10 +289,12 @@ export class Token {
     const params: jwt.SignOptions = {
       expiresIn: opts.expiresInSecs || this.opts.expiresInSecs,
       noTimestamp: !!opts.noTimestamp,
-      header: opts.header || {},
+      header: (opts.header || {}) as JwtHeader,
       ...(opts.subject && { subject: opts.subject }),
       ...(audience && { audience }),
-      ...(issuer && { issuer })
+      ...(issuer && { issuer }),
+      allowInvalidAsymmetricKeyTypes: true,
+      allowInsecureKeySizes: true
     }
     params.header['kid'] = kid
     const key = await this.getPrivateKeyDefinition(kid)
@@ -333,7 +335,10 @@ export class Token {
       ...(audience && { audience }),
       ...(issuer && { issuer }),
       ...(opts.nonce && { nonce: opts.nonce }),
-      ...(opts.algorithms && { algorithms: opts.algorithms as jwt.Algorithm[] })
+      ...(opts.algorithms && {
+        algorithms: opts.algorithms as jwt.Algorithm[]
+      }),
+      allowInvalidAsymmetricKeyTypes: true
     }
     const key =
       opts.key ||
